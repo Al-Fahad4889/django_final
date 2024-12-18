@@ -1,54 +1,84 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login
-from .models import User, Profile
-from .serializers import (
-    UserSerializer, 
-    ProfileSerializer, 
-    UserRegistrationSerializer, 
-    LoginSerializer
-)
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import get_user_model, logout
+from .models import Profile
+from .serializers import UserSerializer, ProfileSerializer
 
-# Register a new user
-class UserRegistrationView(generics.CreateAPIView):
-    serializer_class = UserRegistrationSerializer
-    permission_classes = [permissions.AllowAny]
+# API view for user registration
+class RegisterView(generics.CreateAPIView):
+    permission_classes = [permissions.AllowAny]  # Allow anyone to register
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response({"message": "User registered successfully. Please log in."}, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        # Save the new user instance
+        serializer.save()
 
-# Login user
-class LoginView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
-    permission_classes = [permissions.AllowAny]
+# API view for login
+class LoginView(ObtainAuthToken):
+    serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
-        if user:
-            login(request, user)
-            return Response({"message": "Logged in successfully!"}, status=status.HTTP_200_OK)
-        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        response = super().post(request, *args, **kwargs)
+        token = Token.objects.get(user=self.object)
+        response.data['token'] = token.key  # Attach the token to the response
+        return response
 
-# View and update user's profile
-class ProfileView(generics.RetrieveUpdateDestroyAPIView):
+# API view for logout
+class LogoutView(generics.APIView):
+    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can log out
+
+    def post(self, request):
+        user = request.user
+        Token.objects.filter(user=user).delete()  # Delete the user's token
+        logout(request)  # Log out the user
+        return Response({'message': 'Logged out successfully.'})
+
+# API view for retrieving, updating, and deleting a user's profile
+class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can access their profile
     serializer_class = ProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        # Get the profile of the logged-in user
         return self.request.user.profile
 
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve the current user's profile.
+        Includes the user's username in the response.
+        """
+        profile = self.get_object()
+        serializer = self.get_serializer(profile)
+        serializer_data = serializer.data
+        serializer_data['username'] = request.user.username
+        return Response(serializer_data)
+
+    def put(self, request, *args, **kwargs):
+        """
+        Update the current user's profile.
+        The user can modify fields like bio, location, phone number, etc.
+        """
+        profile = self.get_object()
+        serializer = self.get_serializer(profile, data=request.data, partial=True)  # Allows partial updates
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
     def delete(self, request, *args, **kwargs):
+        """
+        Delete the current user's profile.
+        This will also delete the associated user account.
+        """
         profile = self.get_object()
         profile.delete()
-        return Response({"message": "Profile deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        request.user.delete()  # Deletes the associated user account
+        return Response({'message': 'Profile and user account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
-# Admin: List all users
+# API view for admins to view a list of all users
 class UserListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]  # Only admins can access this
+    queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
-    queryset = User.objects.all()
