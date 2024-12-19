@@ -1,21 +1,15 @@
+# feedback/models.py
 from django.db import models
-from users.models import User
-from django.utils.timezone import now
+from django.conf import settings
+from events.models import Event  # Assuming you have an Event model in the events app
 
-
-class Event(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-    )
-    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    date = models.DateTimeField()
-    venue = models.CharField(max_length=255)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+class Feedback(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='feedbacks')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='feedbacks')
+    comment = models.TextField()  # Feedback text
+    rating = models.PositiveSmallIntegerField()  # 1 to 5 rating
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    
+
+    def __str__(self):
+        return f"Feedback by {self.user.username} for {self.event.name}"
