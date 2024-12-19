@@ -36,9 +36,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
    path('admin/', admin.site.urls),  # Admin panel
-    path('api/users/', include('users.urls')),  # Include users app URLs
-    path('api/events/', include('events.urls')),  # Include events app URLs
-    path('api/feedback/', include('feedback.urls')),  # Include feedback app URLs
+    
     path('api/transactions/', include('transactions.urls')),  # Include transactions app URLs
     path('api/notifications/', include('notifications.urls')),  # Include notifications app URLs
     path('api/tickets/', include('tickets.urls')),  # Include tickets app URLs
