@@ -1,7 +1,8 @@
+# feedback/urls.py
 from django.urls import path
-from .views import FeedbackListCreateView, FeedbackDetailView
+from .views import FeedbackListCreateView, FeedbackRetrieveUpdateDestroyView
 
 urlpatterns = [
-    path('feedback/', FeedbackListCreateView.as_view(), name='feedback-list-create'),
-    path('feedback/<int:pk>/', FeedbackDetailView.as_view(), name='feedback-detail'),
+    path('', FeedbackListCreateView.as_view(), name='feedback-list-create'),  # List all or create feedback
+    path('<int:pk>/', FeedbackRetrieveUpdateDestroyView.as_view(), name='feedback-detail'),  # Retrieve, update, delete
 ]
