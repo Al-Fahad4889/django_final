@@ -20,3 +20,15 @@ from django.urls import path
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/users/', include('users.urls')),
+    path('api/events/', include('events.urls')),
+    path('api/feedback/', include('feedback.urls')),
+    path('api/transactions/', include('transactions.urls')),
+    path('api/notifications/', include('notifications.urls')),
+    path('api/tickets/', include('tickets.urls')),  # Add tickets URLs
+]
