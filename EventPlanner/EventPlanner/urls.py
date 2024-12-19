@@ -16,13 +16,32 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from django.urls import path, re_path
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="API Documentation",
+        default_version="v1",
+        description="API documentation for the Event Planner project",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="support@example.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/users/', include('users.api.urls')),
-    path('api/events/', include('events.api.urls')),
-    path('api/feedback/', include('feedback.api.urls')),
-    path('api/transactions/', include('transactions.api.urls')),
-    path('api/notifications/', include('notifications.api.urls')),
-    path('api/tickets/', include('tickets.api.urls')),
+   path('admin/', admin.site.urls),  # Admin panel
+    path('api/users/', include('users.urls')),  # Include users app URLs
+    path('api/events/', include('events.urls')),  # Include events app URLs
+    path('api/feedback/', include('feedback.urls')),  # Include feedback app URLs
+    path('api/transactions/', include('transactions.urls')),  # Include transactions app URLs
+    path('api/notifications/', include('notifications.urls')),  # Include notifications app URLs
+    path('api/tickets/', include('tickets.urls')),  # Include tickets app URLs
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]

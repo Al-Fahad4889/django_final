@@ -40,6 +40,11 @@ INSTALLED_APPS = [
     'users',
     'events',
     'feedback',
+    'notifications',
+    'transactions',
+    'tickets',
+    'rest_framework', 
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
