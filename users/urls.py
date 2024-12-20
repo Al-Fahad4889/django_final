@@ -1,8 +1,16 @@
 from django.urls import path
-from .views import UserListCreateView, UserDetailView, ProfileDetailView
+from .views import (
+    RegisterView, 
+    LoginView, 
+    LogoutView, 
+    ProfileDetailView, 
+    UserListView
+)
 
 urlpatterns = [
-    path('users/', UserListCreateView.as_view(), name='user-list-create'),
-    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
-    path('users/<int:pk>/profile/', ProfileDetailView.as_view(), name='profile-detail'),
+    path('register/', RegisterView.as_view(), name='register'),  # User registration endpoint
+    path('login/', LoginView.as_view(), name='login'),          # User login endpoint
+    path('logout/', LogoutView.as_view(), name='logout'),       # User logout endpoint
+    path('profile/', ProfileDetailView.as_view(), name='profile'),  # User profile detail endpoint
+    path('admin/users/', UserListView.as_view(), name='admin-users'),  # List all users (admin only)
 ]
